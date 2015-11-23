@@ -9,6 +9,12 @@ import Console
 import Level
 import Types
 
+import Data.Char
+import Foreign.C.Types
+getWindowsChar = fmap (chr.fromEnum) c_getch
+foreign import ccall unsafe "conio.h getch"
+  c_getch :: IO CInt
+
 
 -- operator to add 2 coordinates together
 (|+|) :: Coord -> Coord -> Coord
@@ -19,7 +25,7 @@ import Types
 -- recursing on invalid input
 getInput :: IO Input
 getInput = do
-  char <- getChar
+  char <- getWindowsChar
   case char of
     'q' -> return Exit
     'w' -> return (Dir Up)
@@ -38,16 +44,16 @@ dirToCoord Left  = (-1, 0)
 dirToCoord Right = (1,  0)
 
 
--- add the supplied direction to the hero's position, 
--- and set that to be the hero's new position, making 
+-- add the supplied direction to the hero's position,
+-- and set that to be the hero's new position, making
 -- sure to limit it between 0 and 80 in either direction
 handleDir :: World -> Direction -> IO ()
 handleDir w dir
   | isWall coord lvl ||
     isClosedDoor coord lvl = gameLoop ((^=) posL (w ^. posL) w)
- 
+
   | otherwise              = gameLoop ((^=) posL coord w)
-  where 
+  where
     h              = wHero w
     lvl            = wLevel w
     coord          = (newX, newY)
